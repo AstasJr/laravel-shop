@@ -10,7 +10,7 @@ Route::get('/', function () {
 
 Route::get('/faker', function () {
     $faker = Factory::create();
-    for ($i = 0; $i <= 10; $i++) {
+    for ($i = 0; $i = 5; $i++) {
         (new FakerImageProvider($faker))->loremflickr('posts');
     }
 });
