@@ -22,4 +22,5 @@ yarn-error.log
 /var
 .bash_history
 /resources/templates
+/resources/images
 /public/vendor
