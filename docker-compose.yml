@@ -29,7 +29,6 @@ services:
       - ./storage/:${PROJECT_PATH}/storage/
   db:
       image: mysql
-      container_name: db
       restart: unless-stopped
       command: --default-authentication-plugin=mysql_native_password
       environment:
@@ -38,7 +37,7 @@ services:
           - MYSQL_PASSWORD=${DB_PASSWORD}
           - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
       ports:
-          - "${DB_PORT}:3306"
+          - "6006:3306"
       volumes:
           - ./docker/mysql/data:/var/lib/mysql
   phpmyadmin:

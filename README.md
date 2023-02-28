@@ -20,3 +20,7 @@ php artisan key:generate
 ```
 composer install
 ```
+6. Use migrations
+```
+php artisan migrate
+```
