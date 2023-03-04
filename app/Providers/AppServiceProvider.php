@@ -6,7 +6,6 @@ use App\Faker\FakerImageProvider;
 use Carbon\CarbonInterval;
 use Faker\Factory;
 use Faker\Generator;
-use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\Facades\DB;
@@ -33,25 +32,19 @@ class AppServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         //checking models
-        //Model::shouldBeStrict(app()->isProduction());
-        Model::shouldBeStrict();
+        Model::shouldBeStrict(); //Model::shouldBeStrict(app()->isProduction());
         if (!app()->isProduction()) {
-            // if db query > 4 sec
-            DB::whenQueryingForLongerThan(CarbonInterval::seconds(4), function (Connection $connection) {
-                logger()->channel('telegram')->debug('whenQueryingForLongerThan: ' . $connection->totalQueryDuration());
-            });
             //if every query > 100 ms
             DB::listen(function($query) {
                 if ($query->time > 100) {
-                    logger()->channel('telegram')->debug('whenQueryingForLongerThan: ' . $query->sql, $query->bindings);
+                    logger()->channel('telegram')->debug('query longer than 100ms: ' . $query->sql, $query->bindings);
                 }
             });
             // if execution time of script > 4 sec
-            $kernel = app(Kernel::class);
-            $kernel->whenRequestLifecycleIsLongerThan(
+            app(Kernel::class)->whenRequestLifecycleIsLongerThan(
                 CarbonInterval::seconds(4),
                 function () {
                     logger()
