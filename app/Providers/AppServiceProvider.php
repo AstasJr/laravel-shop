@@ -36,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
     {
         //checking models
         Model::shouldBeStrict(); //Model::shouldBeStrict(app()->isProduction());
-        if (!app()->isProduction()) {
+        if (app()->isProduction()) {
             //if every query > 100 ms
             DB::listen(function($query) {
                 if ($query->time > 100) {
