@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
-use Illuminate\Database\Connection;
+use App\Faker\FakerImageProvider;
+use Carbon\CarbonInterval;
+use Faker\Factory;
+use Faker\Generator;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 
@@ -16,7 +20,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->singleton(Generator::class, function() {
+            $faker = Factory::create();
+            $faker->addProvider(new FakerImageProvider($faker));
+            return $faker;
+        });
     }
 
     /**
@@ -24,13 +32,26 @@ class AppServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(): void
     {
-        Model::preventLazyLoading(!app()->isProduction());
-        Model::preventSilentlyDiscardingAttributes(!app()->isProduction());
-
-        DB::whenQueryingForLongerThan(500, function (Connection $connection) {
-            //
-        });
+        //checking models
+        Model::shouldBeStrict(); //Model::shouldBeStrict(app()->isProduction());
+        if (app()->isProduction()) {
+            //if every query > 100 ms
+            DB::listen(function($query) {
+                if ($query->time > 100) {
+                    logger()->channel('telegram')->debug('query longer than 100ms: ' . $query->sql, $query->bindings);
+                }
+            });
+            // if execution time of script > 4 sec
+            app(Kernel::class)->whenRequestLifecycleIsLongerThan(
+                CarbonInterval::seconds(4),
+                function () {
+                    logger()
+                        ->channel('telegram')
+                        ->debug('whenRequestLifecycleIsLongerThan: ' . request()->url());
+                }
+            );
+        }
     }
 }
