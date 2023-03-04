@@ -24,3 +24,4 @@ yarn-error.log
 /resources/templates
 /resources/images
 /public/vendor
+/tests/Fixtures
