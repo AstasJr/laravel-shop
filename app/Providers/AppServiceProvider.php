@@ -35,23 +35,30 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //N+1 error
-        Model::preventLazyLoading(!app()->isProduction());
-        //not set fillable property in model
-        Model::preventSilentlyDiscardingAttributes(!app()->isProduction());
-        // if db query > 500 ms
-        DB::whenQueryingForLongerThan(500, function (Connection $connection) {
-            logger()->channel('telegram')->debug('whenQueryingForLongerThan: ' . $connection->query()->toSql());
-        });
-        // if execution time of script > 4 seconds
-        $kernel = app(Kernel::class);
-        $kernel->whenRequestLifecycleIsLongerThan(
-            CarbonInterval::seconds(0.01),
-            function () {
-                logger()
-                    ->channel('telegram')
-                    ->debug('whenRequestLifecycleIsLongerThan: ' . request()->url());
-            }
-        );
+        //checking models
+        //Model::shouldBeStrict(app()->isProduction());
+        Model::shouldBeStrict();
+        if (!app()->isProduction()) {
+            // if db query > 4 sec
+            DB::whenQueryingForLongerThan(CarbonInterval::seconds(4), function (Connection $connection) {
+                logger()->channel('telegram')->debug('whenQueryingForLongerThan: ' . $connection->totalQueryDuration());
+            });
+            //if every query > 100 ms
+            DB::listen(function($query) {
+                if ($query->time > 100) {
+                    logger()->channel('telegram')->debug('whenQueryingForLongerThan: ' . $query->sql, $query->bindings);
+                }
+            });
+            // if execution time of script > 4 sec
+            $kernel = app(Kernel::class);
+            $kernel->whenRequestLifecycleIsLongerThan(
+                CarbonInterval::seconds(4),
+                function () {
+                    logger()
+                        ->channel('telegram')
+                        ->debug('whenRequestLifecycleIsLongerThan: ' . request()->url());
+                }
+            );
+        }
     }
 }
