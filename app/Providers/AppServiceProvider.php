@@ -2,14 +2,15 @@
 
 namespace App\Providers;
 
-use App\Faker\FakerImageProvider;
+use App\Support\Testing\FakerImageProvider;
 use Carbon\CarbonInterval;
 use Faker\Factory;
 use Faker\Generator;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -53,5 +54,9 @@ class AppServiceProvider extends ServiceProvider
                 }
             );
         }
+        //password validation
+        Password::defaults(function () {
+            return Password::min(8);
+        });
     }
 }
